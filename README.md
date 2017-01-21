@@ -3,6 +3,13 @@ RYTDL (Reddit YouTube Downloader)
 
 Download all YouTube links in a subreddit as MP3s for listening.
 
+Set Up
+------
+
+RYTDL uses the Reddit API so you will need a Reddit account and you will need to set up a developer app, then run:
+> python app.py -s
+
+
 How To Use
 ----------
 Run from CLI specifying a subreddit. For example, to download all YouTube videos from /r/house:
