@@ -1,10 +1,8 @@
 """
 Subreddit YouTube Mp3 Downloader
-
 Some notes:
 Setting a filename through youtubedl caused corruption in some files
 Move file to output directory after download because I don't want to piss off youtubedl
-
 """
 
 from __future__ import unicode_literals
@@ -15,7 +13,24 @@ import argparse
 import youtube_dl
 import praw
 import tagpy
+import yaml
 
+
+def write_settings(data):
+    """Write the previous image to settings file"""
+    print "Writing settings..."
+    with open('settings.yml', 'w') as outfile:
+        outfile.write(yaml.dump(data, default_flow_style=True))
+
+def read_settings():
+    """ Read settings from YAML file"""
+    print "Read settings..."
+    try:
+        return yaml.load(open("settings.yml"))
+    except:
+        print "Could not read settings"
+        print "Please use the -i flag to run RYTDL setup"
+        return None
 
 def get_tracks(subreddit, genre, outputdir, submissions=40):
     print "Downloading submissions from /r/%s" % subreddit
@@ -25,10 +40,12 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
     with open('idlist.txt', 'r') as idlistfile:
         idlist = [line.strip() for line in idlistfile]
 
+    settings = read_settings()
+
     # Create reddit instance
-    reddit = praw.Reddit(client_id='BxvVu9bOc1JaPw',
-                         client_secret='',
-                         user_agent='python:rytdl:v2017.01.14 (by /u/christophski)')
+    reddit = praw.Reddit(client_id=settings["client_id"],
+                         client_secret=settings["client_secret"],
+                         user_agent=settings["user_agent"])
 
     # Create lists of links
     ytlist = []
@@ -55,7 +72,6 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
 
     # Download videos as MP3 and edit ID3 Tags
     for video in ytlist:
-        edittags = True
         if video.id not in idlist:
             print "Processing %s" % video.title
             # Get artist and track name from submission title
@@ -77,7 +93,7 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                 except AttributeError:
                     # If can't process title, just set filename to submission title
                     print "Improperly formatted title, ID3 tags will not be completed"
-                    edittags = False
+                    trackartist = ""
                     filename = ""
                     with open('errors.log', 'a') as errorlog:
                         errorlog.write("%s\n" % video.title)
@@ -99,7 +115,7 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                     os.rename(newest, filename)
 
                 # If possible set proper ID3 tags otherwise just set title to title
-                if edittags is True:
+                if trackartist != "":
                     print "Set ID3 tags"
                     # Set artist/track title/genre
                     audiofile = tagpy.FileRef(str(filename))
@@ -107,6 +123,7 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                     audiofile.tag().album = tracktitle
                     audiofile.tag().title = tracktitle
                     audiofile.tag().genre = genre.title()
+                    audiofile.tag().comment = "RYTDL YouTube Rip"
                     # Save file
                     audiofile.save()
                 else:
@@ -135,16 +152,32 @@ if __name__ == "__main__":
 
     # Set up CLI arguments
     PARSER = argparse.ArgumentParser()
-    PARSER.add_argument("subreddit", help="Specify the subreddit to fetch submissions from")
+    PARSER.add_argument("-i", "--setup", help="Set up RYTDL with your developer account details",
+                        action="store_true")
+    PARSER.add_argument("-s", "--subreddit",
+                        help="Specify the subreddit to fetch submissions from", default="")
     PARSER.add_argument("-g", "--genre", help="Choose Genre tag to be added to MP3s", default="")
-    PARSER.add_argument("-s", "--submissions", type=int,
+    PARSER.add_argument("-n", "--submissions", type=int,
                         help="Pick number of submissions to fetch (default 40)", default=40)
     PARSER.add_argument("-o", "--outputdir", help="Specify output directory", default="downloads")
 
+
     ARGS = PARSER.parse_args()
 
-    try:
-        get_tracks(ARGS.subreddit, ARGS.genre, ARGS.outputdir, ARGS.submissions)
-    except praw.errors.InvalidSubreddit:
-        print "Invalid Subreddit"
-        quit()
+    if ARGS.setup is True:
+        SETTINGS = {}
+        print "Set up"
+        print "Enter your Reddit Client ID:"
+        SETTINGS["client_id"] = raw_input()
+        print "Enter your client secret:"
+        SETTINGS["client_secret"] = raw_input()
+        SETTINGS["user_agent"] = "python:rytdl:v2017.01.21 (by /u/christophski)"
+        write_settings(SETTINGS)
+    else:
+        if ARGS.subreddit == "":
+            print "Please specify a subreddit using the -s (--subreddit) flag"
+        else:
+            try:
+                get_tracks(ARGS.subreddit, ARGS.genre, ARGS.outputdir, ARGS.submissions)
+            except praw.errors.InvalidSubreddit:
+                print "Invalid Subreddit"

@@ -6,20 +6,20 @@ Download all YouTube links in a subreddit as MP3s for listening.
 Set Up
 ------
 
-RYTDL uses the Reddit API so you will need a Reddit account and you will need to set up a developer app, then run:
-> python app.py -s
+RYTDL uses the Reddit API so you will need a Reddit account and you will need to set up a developer app (to get a client id and client secret), then run:
+> python rytdl.py -s
 
 
 How To Use
 ----------
 Run from CLI specifying a subreddit. For example, to download all YouTube videos from /r/house:
-> python app.py house
+> python rytdl.py house
 
 To specify the Genre tag in the output MP3s:
-> python app.py -g House house
+> python rytdl.py -g House house
 
 To specify number of submissions to retrieve:
-> python app.py -s 30 house
+> python rytdl.py -s 30 house
 
 Please note that only submissions from YouTube will be downloaded. So specifying 30 submissions might download less than 30 MP3s.
 
