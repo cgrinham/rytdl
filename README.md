@@ -26,13 +26,10 @@ Please note that only submissions from YouTube will be downloaded. So specifying
 
 To Do
 -----
-- put downloads in download folder
 - re-write in bash (for skillz)
 - port to python3 (wtf why am i using python2)
-- workaround non-ascii characters in YouTubeDL
 
 
 Known Issues
 ------------
-- Currently uses most recently modified file to edit ID3 tags which could lead to the wrong file being edited
-- YouTubeDL freaks out when it encounters a non-ASCII character and the developer won't fix it
+- Possible bug where Tagpy hates on the mp3, possibly because of unicode filename. Not sure. Will keep an eye out.

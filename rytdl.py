@@ -8,7 +8,6 @@ Move file to output directory after download because I don't want to piss off yo
 from __future__ import unicode_literals
 import re
 import os
-import glob
 import argparse
 import youtube_dl
 import praw
@@ -68,6 +67,7 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
+        'outtmpl' : 'tmp.%(ext)s',
     }
 
     # Download videos as MP3 and edit ID3 Tags
@@ -98,52 +98,63 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                     with open('errors.log', 'a') as errorlog:
                         errorlog.write("%s\n" % video.title)
 
-
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 print "Downloading %s" % video.title
             
                 # Actually Ddownload the video
-                ydl.download([video.url])
+                try:
+                    ydl.download([video.url])
 
-                # Need a better solution because this is hacky af
-                # What if something else modifies a file before we access it?
-                newest = max(glob.iglob('*.[Mm][Pp]3'), key=os.path.getctime)
-                if filename == "":
-                    filename = "%s.mp3" % newest[:-16]
-                    os.rename(newest, filename)
-                else:
-                    os.rename(newest, filename)
+                    # Need a better solution because this is hacky af
+                    # What if something else modifies a file before we access it?
+                    #newest = max(glob.iglob('*.[Mm][Pp]3'), key=os.path.getctime)
+                    
+                    currentfile = "tmp.mp3"
 
-                # If possible set proper ID3 tags otherwise just set title to title
-                if trackartist != "":
-                    print "Set ID3 tags"
-                    # Set artist/track title/genre
-                    audiofile = tagpy.FileRef(str(filename))
-                    audiofile.tag().artist = trackartist
-                    audiofile.tag().album = tracktitle
-                    audiofile.tag().title = tracktitle
-                    audiofile.tag().genre = genre.title()
-                    audiofile.tag().comment = "RYTDL YouTube Rip"
-                    # Save file
-                    audiofile.save()
-                else:
-                    audiofile = tagpy.FileRef(str(filename))
-                    audiofile.tag().title = video.title
-                    audiofile.save()
+                    # If possible set proper ID3 tags otherwise just set title to title
+                    if trackartist != "":
+                        #print "Set ID3 tags"
+                        # Set artist/track title/genre
+                        audiofile = tagpy.FileRef(str(currentfile))
+                        audiofile.tag().artist = trackartist
+                        audiofile.tag().album = tracktitle
+                        audiofile.tag().title = tracktitle
+                        audiofile.tag().genre = genre.title()
+                        audiofile.tag().comment = "RYTDL YouTube Rip"
+                        # Save file
+                        audiofile.save()
+                    else:
+                        audiofile = tagpy.FileRef(str(currentfile))
+                        audiofile.tag().title = video.title
+                        audiofile.save()
 
-                # move file to output directory
-                if not os.path.exists(outputdir):
-                    os.makedirs(outputdir)
-                # In python3 can do: os.makedirs(path, exist_ok=True)
-                os.rename(filename, os.path.join(os.getcwd(), outputdir, filename))
+                    if filename == "":
+                        filename = "%s.mp3" % currentfile[:-16]
+                        os.rename(currentfile, filename)
+                    else:
+                        os.rename(currentfile, filename)
 
+                    # move file to output directory
+                    if not os.path.exists(outputdir):
+                        os.makedirs(outputdir)
+                    # In python3 can do: os.makedirs(path, exist_ok=True)
+                    os.rename(filename, os.path.join(os.getcwd(), outputdir, filename))
+                except youtube_dl.utils.DownloadError:
+                    print "Video not available"
+                    print ""
+            
             # Append submission id to file
             with open("idlist.txt", "a") as idlistfile:
                 idlistfile.write("\n")
                 idlistfile.write(video.id)
+            print "Submission successfully downloaded"
             print ""
         else:
-            print "Subimssion %s already downloaded, skipping" % video.id
+            print "Submission %s already downloaded, skipping" % video.id
+
+    # Clean up
+    if os.path.exists("tmp.mp3"):
+        os.remove("tmp.mp3")
 
 if __name__ == "__main__":
 
