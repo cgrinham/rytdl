@@ -8,6 +8,7 @@ Move file to output directory after download because I don't want to piss off yo
 from __future__ import unicode_literals
 import re
 import os
+import time
 import argparse
 import youtube_dl
 import praw
@@ -137,13 +138,21 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                     else:
                         pass
 
-                    # Hopefully this works around "file not found" bug
+                    print filename
+                    # Check for overly long filename and correct
+                    if len(filename) > 50:
+                        print "Filename too long"
+                        filename = "%s.mp3" % filename[:36]
+                        print "New filename %s" % filename
+
+                    print os.path.join(os.getcwd(), currentfile)
                     try:
                         os.rename(currentfile, filename)
-                    except:
+                    except OSError, e:
+                        print e
                         logerror("File not found error, retrying")
                         time.sleep(5)
-                        os.rename(currentfile, filename)
+                        os.rename(os.path.join(os.getcwd(), currentfile), os.path.join(os.getcwd(), filename))
 
                     # move file to output directory
                     if not os.path.exists(outputdir):
