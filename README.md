@@ -33,3 +33,4 @@ To Do
 Known Issues
 ------------
 - Possible bug where Tagpy hates on the mp3, possibly because of unicode filename. Not sure. Will keep an eye out.
+- Sometimes os.rename reports "file not found", not sure why this is!

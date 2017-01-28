@@ -14,6 +14,10 @@ import praw
 import tagpy
 import yaml
 
+def logerror(error):
+    print error
+    with open('errors.log', 'a') as errorlog:
+        errorlog.write("%s\n" % error)
 
 def write_settings(data):
     """Write the previous image to settings file"""
@@ -95,8 +99,8 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                     print "Improperly formatted title, ID3 tags will not be completed"
                     trackartist = ""
                     filename = ""
-                    with open('errors.log', 'a') as errorlog:
-                        errorlog.write("%s\n" % video.title)
+
+                    logerror(video.title)
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 print "Downloading %s" % video.title
@@ -130,8 +134,15 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
 
                     if filename == "":
                         filename = "%s.mp3" % currentfile[:-16]
-                        os.rename(currentfile, filename)
                     else:
+                        pass
+
+                    # Hopefully this works around "file not found" bug
+                    try:
+                        os.rename(currentfile, filename)
+                    except:
+                        logerror("File not found error, retrying")
+                        time.sleep(5)
                         os.rename(currentfile, filename)
 
                     # move file to output directory
