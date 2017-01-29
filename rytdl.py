@@ -133,10 +133,11 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                         audiofile.tag().title = video.title
                         audiofile.save()
 
+                    # Rename the mp3
                     if filename == "":
                         filename = "%s.mp3" % currentfile[:-16]
-                    else:
-                        pass
+                    # Replace slashes with underscores to avoid os errors
+                    filename = filename.replace('/', '_')
 
                     print filename
                     # Check for overly long filename and correct
