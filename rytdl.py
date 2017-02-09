@@ -160,16 +160,16 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                         os.makedirs(outputdir)
                     # In python3 can do: os.makedirs(path, exist_ok=True)
                     os.rename(filename, os.path.join(os.getcwd(), outputdir, filename))
+
+                    # Append submission id to file
+                    with open("idlist.txt", "a") as idlistfile:
+                        idlistfile.write("\n")
+                        idlistfile.write(video.id)
+                    print "Submission successfully downloaded"
+                    print ""
                 except youtube_dl.utils.DownloadError:
                     print "Video not available"
                     print ""
-            
-            # Append submission id to file
-            with open("idlist.txt", "a") as idlistfile:
-                idlistfile.write("\n")
-                idlistfile.write(video.id)
-            print "Submission successfully downloaded"
-            print ""
         else:
             print "Submission %s already downloaded, skipping" % video.id
 
