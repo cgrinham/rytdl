@@ -18,10 +18,20 @@ Run from CLI specifying a subreddit. For example, to download all YouTube videos
 To specify the Genre tag in the output MP3s:
 > python rytdl.py -s house -g House
 
+
+Options
+-------
+
 To specify number of submissions to retrieve:
 > python rytdl.py -s house -g House -n 30 house
 
 Please note that only submissions from YouTube will be downloaded. So specifying 30 submissions might download less than 30 MP3s.
+
+Sort submissions, top all time:
+> python rytdl.py -s house -g House -t
+
+Sort submissions, top all past month:
+> python rytdl.py -s house -g House -m
 
 
 To Do
