@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Subreddit YouTube Mp3 Downloader
 Some notes:
@@ -36,7 +37,38 @@ def read_settings():
         print "Please use the -i flag to run RYTDL setup"
         return None
 
-def get_tracks(subreddit, genre, outputdir, submissions=40):
+def extract_song_details(title):
+    # Get artist and track name from submission title
+    try:
+        matches = re.match(r'(.*) - (.*)', title)
+        trackartist = matches.group(1)
+        tracktitle = matches.group(2)
+        filename = "%s - %s.mp3" % (trackartist, tracktitle)
+    except AttributeError:
+        print "Improperly formatted title, will attempt other formatting"
+
+        try:
+            matches = re.match(r'(.*)- (.*)', title)
+            trackartist = matches.group(1)
+            tracktitle = matches.group(2)
+            filename = "%s - %s.mp3" % (trackartist, tracktitle)
+        except AttributeError:
+            try:
+                matches = re.match(r'(.*) – (.*)', title)
+                trackartist = matches.group(1)
+                tracktitle = matches.group(2)
+                filename = "%s - %s.mp3" % (trackartist, tracktitle)
+            except AttributeError:
+                # If can't process title, just set filename to submission title
+                print "Improperly formatted title, ID3 tags will not be completed"
+                trackartist = ""
+                tracktitle = ""
+                filename = ""
+
+                #logerror(title)
+    return filename, trackartist, tracktitle
+
+def get_tracks(subreddit, genre, outputdir, sort, submissionslimit=40):
     print "Downloading submissions from /r/%s" % subreddit
     # Get previously downloaded IDs
     idlist = []
@@ -51,12 +83,24 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                          client_secret=settings["client_secret"],
                          user_agent=settings["user_agent"])
 
+    if sort == "hot":
+        print "Sort submissions by 'hot'"
+        submissions = reddit.get_subreddit(subreddit).get_hot(limit=submissionslimit)
+    elif sort == "alltime":
+        print "Sort submissions by 'Top from All Time'"
+        submissions = reddit.get_subreddit(subreddit).get_top_from_all(limit=submissionslimit)
+    elif sort == "month":
+        print "Sort submissions by 'Top from the past Month'"
+        submissions = reddit.get_subreddit(subreddit).get_top_from_month(limit=submissionslimit)
+    else:
+        print "No sort"
+
     # Create lists of links
     ytlist = []
-    sclist = []
+    sclist = [] # for future soundcloud downloading
     otherlist = []
 
-    for submission in reddit.get_subreddit(subreddit).get_hot(limit=submissions):
+    for submission in submissions:
         if submission.url.startswith('https://www.youtube.com') is True:
             ytlist.append(submission)
         elif submission.url.startswith('https://soundcloud.com') is True:
@@ -79,41 +123,16 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
     for video in ytlist:
         if video.id not in idlist:
             print "Processing %s" % video.title
-            # Get artist and track name from submission title
-            matches = re.match(r'(.*) - (.*)', video.title)
-            try:
-                trackartist = matches.group(1)
-                tracktitle = matches.group(2)
-                filename = "%s - %s.mp3" % (trackartist, tracktitle)
-
-            except AttributeError:
-                print "Improperly formatted title, will attempt other formatting"
-
-                try:
-                    matches = re.match(r'(.*)- (.*)', video.title)
-                    trackartist = matches.group(1)
-                    tracktitle = matches.group(2)
-                    filename = "%s - %s.mp3" % (trackartist, tracktitle)
-
-                except AttributeError:
-                    # If can't process title, just set filename to submission title
-                    print "Improperly formatted title, ID3 tags will not be completed"
-                    trackartist = ""
-                    filename = ""
-
-                    logerror(video.title)
+            
+            filename, trackartist, tracktitle = extract_song_details(video.title)
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 print "Downloading %s" % video.title
             
-                # Actually Ddownload the video
+                # Actually download the video
                 try:
                     ydl.download([video.url])
 
-                    # Need a better solution because this is hacky af
-                    # What if something else modifies a file before we access it?
-                    #newest = max(glob.iglob('*.[Mm][Pp]3'), key=os.path.getctime)
-                    
                     currentfile = "tmp.mp3"
 
                     # If possible set proper ID3 tags otherwise just set title to title
@@ -143,7 +162,7 @@ def get_tracks(subreddit, genre, outputdir, submissions=40):
                     # Check for overly long filename and correct
                     if len(filename) > 50:
                         print "Filename too long"
-                        filename = "%s.mp3" % filename[:36]
+                        filename = "%s.mp3" % filename[:50]
                         print "New filename %s" % filename
 
                     print os.path.join(os.getcwd(), currentfile)
@@ -192,6 +211,10 @@ if __name__ == "__main__":
     PARSER.add_argument("-n", "--submissions", type=int,
                         help="Pick number of submissions to fetch (default 40)", default=40)
     PARSER.add_argument("-o", "--outputdir", help="Specify output directory", default="downloads")
+    PARSER.add_argument("-t", "--top", help="Get top submissions from all time",
+                        action="store_true")
+    PARSER.add_argument("-m", "--month", help="Get top submissions from all the past month",
+                        action="store_true")
 
 
     ARGS = PARSER.parse_args()
@@ -209,7 +232,13 @@ if __name__ == "__main__":
         if ARGS.subreddit == "":
             print "Please specify a subreddit using the -s (--subreddit) flag"
         else:
+            if ARGS.top is True:
+                SORTSUB = "alltime"
+            elif ARGS.month is True:
+                SORTSUB = "month"
+            else:
+                SORTSUB = "hot"
             try:
-                get_tracks(ARGS.subreddit, ARGS.genre, ARGS.outputdir, ARGS.submissions)
+                get_tracks(ARGS.subreddit, ARGS.genre, ARGS.outputdir, SORTSUB, ARGS.submissions)
             except praw.errors.InvalidSubreddit:
                 print "Invalid Subreddit"
