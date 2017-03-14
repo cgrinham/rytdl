@@ -39,7 +39,6 @@ Sort submissions by top past month:
 To Do
 -----
 - re-write in bash (for skillz)?
-- port to python3 (wtf why am i using python2)
 - Download only tracks with more than x upvotes
 - GUI?
 - Support other youtube links i.e. youtu.be
