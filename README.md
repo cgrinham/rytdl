@@ -15,32 +15,31 @@ How To Use
 Run from CLI specifying a subreddit. For example, to download all YouTube videos from /r/house:
 > python rytdl.py -s house
 
-To specify the Genre tag in the output MP3s:
-> python rytdl.py -s house -g House
-
 
 Options
 -------
+
+By default the genre tag is set to the subreddit title. 
+To specify the Genre tag in the output MP3s:
+> python rytdl.py -s house -g House
 
 To specify number of submissions to retrieve:
 > python rytdl.py -s house -g House -n 30 house
 
 Please note that only submissions from YouTube will be downloaded. So specifying 30 submissions might download less than 30 MP3s.
 
-Sort submissions, top all time:
+Submissions are sorted by "hot" by default.
+To sort submissions by top all time:
 > python rytdl.py -s house -g House -t
 
-Sort submissions, top all past month:
+Sort submissions by top past month:
 > python rytdl.py -s house -g House -m
 
 
 To Do
 -----
-- re-write in bash (for skillz)
+- re-write in bash (for skillz)?
 - port to python3 (wtf why am i using python2)
-
-
-Known Issues
-------------
-- Possible bug where Tagpy hates on the mp3, possibly because of unicode filename. Not sure. Will keep an eye out.
-- Sometimes os.rename reports "file not found", not sure why this is!
+- Download only tracks with more than x upvotes
+- GUI?
+- Support other youtube links i.e. youtu.be
