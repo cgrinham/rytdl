@@ -17,11 +17,13 @@ from mutagen.mp3 import MP3
 from mutagen.easyid3 import EasyID3
 import yaml
 
+
 def logerror(error):
     """ Print an error and append it to the error log """
     print(error)
     with open('errors.log', 'a') as errorlog:
         errorlog.write("%s\n" % error)
+
 
 def write_settings(data):
     """Write the previous image to settings file"""
@@ -29,9 +31,10 @@ def write_settings(data):
     with open('settings.yml', 'w') as outfile:
         outfile.write(yaml.dump(data, default_flow_style=True))
 
+
 def read_settings():
     """ Read settings from YAML file"""
-    #print("Read settings...")
+    # print("Read settings...")
     try:
         with open('settings.yml', 'r') as st:
             return yaml.load(st)
@@ -40,22 +43,25 @@ def read_settings():
         print("Please use the -i flag to run RYTDL setup")
         return None
 
+
 def append_id(subid):
     """ Append id to id file """
     with open("idlist.txt", "a") as idlistfile:
         idlistfile.write("\n")
         idlistfile.write(subid)
 
+
 def setup():
     """ Set up application with API """
     settings = {}
     print("Set up")
     print("Enter your Reddit Client ID:")
-    settings["client_id"] = raw_input()
+    settings["client_id"] = input()
     print("Enter your client secret:")
-    settings["client_secret"] = raw_input()
+    settings["client_secret"] = input()
     settings["user_agent"] = "python:rytdl:v2017.01.21 (by /u/christophski)"
     write_settings(settings)
+
 
 def extract_song_details(title):
     """ Get artist and track name from submission title """
@@ -87,6 +93,7 @@ def extract_song_details(title):
     return {"filename": filename, "tags":
             {"artist": trackartist, "title": tracktitle, "year": trackyear}}
 
+
 def write_id3(tempfilename, video, filedict, genre):
     """ Write ID3 tags if possible otherwise just set title to title """
     audiofile = MP3(tempfilename, ID3=EasyID3)
@@ -100,6 +107,7 @@ def write_id3(tempfilename, video, filedict, genre):
         audiofile["title"] = video.title
 
     audiofile.save()
+
 
 def get_tracks(subreddit, genre, outputdir, sort, submissionslimit=40):
     """ Download the tracks """
@@ -148,17 +156,18 @@ def get_tracks(subreddit, genre, outputdir, sort, submissionslimit=40):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
-        'outtmpl' : 'tmp.%(ext)s',
+        'outtmpl': 'tmp.%(ext)s',
     }
 
     # Download videos as MP3 and edit ID3 Tags
     for video in ytlist:
         if video.id not in idlist:
             print("Processing %s (%s)" % (video.title, video.id))
-            
+            print("Score is: %s" % video.score)
+
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 print("Download")
-            
+
                 # Actually download the video
                 try:
                     ydl.download([video.url])
@@ -182,8 +191,8 @@ def get_tracks(subreddit, genre, outputdir, sort, submissionslimit=40):
                         filename = "%s.mp3" % filename[:50]
                         print("New filename %s" % filename)
 
-                    #print(os.path.join(os.getcwd(), currentfile))
-                    
+                    # print(os.path.join(os.getcwd(), currentfile))
+
                     try:
                         os.rename(currentfile, filename)
                     except OSError:
@@ -195,7 +204,8 @@ def get_tracks(subreddit, genre, outputdir, sort, submissionslimit=40):
 
                     # move file to output directory
                     os.makedirs(outputdir, exist_ok=True)
-                    os.rename(filename, os.path.join(os.getcwd(), outputdir, filename))
+                    os.rename(filename, os.path.join(os.getcwd(), outputdir,
+                                                     filename))
 
                     # Append submission id to file
                     append_id(video.id)
