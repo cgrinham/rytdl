@@ -9,6 +9,9 @@ Set Up
 RYTDL uses the Reddit API so you will need a Reddit account and you will need to set up a developer app (to get a client id and client secret), then run:
 > python rytdl.py --setup
 
+RYTDL is written in Python 3 and has a few dependencies. You can install this with pip by running
+> sudo pip3 install praw mutagen youtube_dl
+> sudo apt-get install python3-yaml
 
 How To Use
 ----------
@@ -39,7 +42,6 @@ Sort submissions by top past month:
 To Do
 -----
 - re-write in bash (for skillz)?
-- port to python3 (wtf why am i using python2)
 - Download only tracks with more than x upvotes
 - GUI?
 - Support other youtube links i.e. youtu.be
