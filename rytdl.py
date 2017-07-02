@@ -88,7 +88,7 @@ def extract_song_details(title):
             print("Improperly formatted title, ID3 tags will not be completed")
             trackartist = ""
             tracktitle = ""
-            filename = video.title
+            filename = title
             trackyear = ""
     return {"filename": filename, "tags":
             {"artist": trackartist, "title": tracktitle, "year": trackyear}}
@@ -162,7 +162,7 @@ def get_tracks(subreddit, genre, outputdir, sort, submissionslimit=40):
     # Download videos as MP3 and edit ID3 Tags
     for video in ytlist:
         if video.id not in idlist:
-            print("Processing %s (%s)" % (video.title, video.id))
+            print("Processing \"%s\" (%s)" % (video.title, video.id))
             print("Score is: %s" % video.score)
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -261,3 +261,5 @@ if __name__ == "__main__":
                 get_tracks(ARGS.subreddit, ARGS.genre, ARGS.outputdir, SORTSUB, ARGS.submissions)
             except praw.errors.InvalidSubreddit:
                 print("Invalid Subreddit")
+
+            print("Thanks, see you soon")
