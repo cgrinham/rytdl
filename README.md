@@ -41,7 +41,6 @@ Sort submissions by top past month:
 
 To Do
 -----
-- re-write in bash (for skillz)?
 - Download only tracks with more than x upvotes
 - GUI?
 - Support other youtube links i.e. youtu.be
